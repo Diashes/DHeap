@@ -2,7 +2,7 @@
  * Amanda Stensland amst8501
  * Veronica Stensland vest915
  * 
- * Implements a binary heap. Note that all "matching" is based on the compareTo
+ * Implements a d-ary heap. Note that all "matching" is based on the compareTo
  * method.
  * 
  * @author Mark Allen Weiss
@@ -15,21 +15,23 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
 
   /**
    * Construct the d-ary heap.
-   * Om vi inte skickar in maxChildren när vi skapar vår DHeap,
-   * sätt maxChildren till ett defaultvärde på 2.
    */
   public DHeap() {
+
+    // Om vi inte skickar in maxChildren när vi skapar vår DHeap,
+    // sätt maxChildren till ett defaultvärde.
+
     this(DEFAULT_MAX_CHILDREN);
   }
 
   /**
    * Construct the d-ary heap.
    * 
-   * @param capacity the max size of the d-ary heap's array.
    * @param maxChildren the maximum number of children per node.
    */
   public DHeap(int maxChildren) {
-    if (maxChildren < 2) throw new IllegalArgumentException();
+    if (maxChildren < 2)
+      throw new IllegalArgumentException();
     this.currentSize = 0;
     this.array = (AnyType[]) new Comparable[maxChildren + 2];
     this.maxChildren = maxChildren;
@@ -88,12 +90,32 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
    */
   public AnyType deleteMin() {
     if (isEmpty()) throw new UnderflowException();
-    AnyType removedValue = array[1]; // Spara så värdet kan returneras när det tagits bort.
-    array[1] = array[currentSize]; // Ersätt värdet i root-index med värdet från tail-index.
+
+    // Spara värdet så det kan returneras när det tagits bort.
+
+    AnyType removedValue = array[1];
+
+    // Ersätt värdet i root-index med värdet från tail-index.
+
+    array[1] = array[currentSize];
+
+    // Ta bort värdet som ligger i tail-index.
+
     array[currentSize] = null;
-    currentSize--; // Förminska arrayen, dsv. ta bort tail-index.
-    if (currentSize > 1) percolateDown(1); // Bubbla ner värdet från root-index till rätt index.
-    return removedValue; // Returnera värdet som tagits bort.
+
+    // Förminska arrayen, dsv. ta bort tail-index.
+
+    currentSize--;
+
+    // Om storleken på heapen är större än 1,
+    // bubbla ner värdet från root-index till rätt index.
+
+    if (currentSize > 1)
+      percolateDown(1);
+
+    // Returnera värdet som tagits bort.
+
+    return removedValue;
   }
 
   /**
@@ -141,6 +163,7 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
   private void percolateUp(int index) {
 
     // Om index är mindre än 2, dsv. root-index, gör ingenting.
+    // Finns inget att bubbla upp.
 
     if (index < 2)
       return;
@@ -149,7 +172,9 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
     AnyType parentValue = array[parentIndex];
     AnyType value = array[index];
 
-    if (parentValue == null) return;
+    // Om värdet är mindre än förälderns värde, byt plats på dem.
+    // Efter byte av värde, glöm inte att uppdatera till förälderns index.
+    // Fortsätt sedan att bubbla upp index.
 
     if (value.compareTo(parentValue) < 0) {
       swap(index, parentIndex);
@@ -169,6 +194,12 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
     int smallestIndex = index;
     AnyType smallestValue = array[index];
 
+    // Om det sista indexet i trädet (currentSize) är mindre än det sista 
+    // indexet för nodens (index) barn (lastChildIndex), betyder det att 
+    // noden inte har alla sina barn tillagda i trädet än.
+    // Det sista barnet ligger alltså på det
+    // sista indexet i trädet (currentSize).
+
     if (currentSize < lastChildIndex)
       lastChildIndex = currentSize;
 
@@ -177,7 +208,7 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
     for (int i = firstChildIndex; i <= lastChildIndex; i++) {
       AnyType value = array[i];
 
-      // Om barnet har ett mindre värde, markera det som minsta värdet.
+      // Om barnet har ett mindre värde, sätt det till smallestIndex och smallestValue.
 
       if (value.compareTo(smallestValue) < 0) {
         smallestIndex = i;
@@ -185,7 +216,7 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
       }
     }
       
-    // Om det tidigare visade sig finnas ett barn med ett mindre värde,
+    // Om det finns ett barn med ett mindre värde,
     // byt plats på barnet och föräldern.
     
     AnyType parentValue = array[index];
@@ -195,20 +226,43 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
     }
   }
 
+  /**
+   * Get the parent index.
+   * 
+   * @param index the index at which we want the parent from.
+   * @return the index of the parent.
+   */
   public int parentIndex(int index) {
     if (index < 2) throw new IllegalArgumentException();
     return (index - 2) / maxChildren + 1;
   }
 
+  /**
+   * Get the first child index.
+   * 
+   * @param index the index which we want the first child from.
+   * @return the first child index.
+   */
   public int firstChildIndex(int index) {
     if (index < 1) throw new IllegalArgumentException();
     return index * maxChildren + 2 - maxChildren;
   }
 
+  /**
+   * Returns the size of the heap.
+   * 
+   * @return the size of the heap.
+   */
   public int size() {
     return currentSize;
   }
 
+  /**
+   * Get value from index.
+   * 
+   * @param index the index to get the value from.
+   * @return the value of specified index.
+   */
   public AnyType get(int index) {
     return array[index];
   }
