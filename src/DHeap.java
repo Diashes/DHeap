@@ -30,8 +30,13 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
    * @param maxChildren the maximum number of children per node.
    */
   public DHeap(int maxChildren) {
+
+    // maxChildren får inte vara mindre än två.
+    // Varje nod måste ha minst två barn.
+
     if (maxChildren < 2)
       throw new IllegalArgumentException();
+
     this.currentSize = 0;
     this.array = (AnyType[]) new Comparable[maxChildren + 2];
     this.maxChildren = maxChildren;
@@ -56,9 +61,20 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
    * @param item the item to insert.
    */
   public void insert(AnyType item) {
+
+    // Om vi fyllt på med noder så att arrayen tar slut,
+    // då måste vi förstora arrayen.
+
     if (currentSize == array.length - 1)
       enlargeArray(array.length * 2 + 1);
+
+    // Förstora currentSize och lägg till värdet sist i heap-trädet.
+
     array[++currentSize] = item;
+
+    // Bubbla upp värdet så att värdet hamnar på rätt plats.
+    // Små värden ska ligga ovanför större värden i heap-trädet.
+
     percolateUp(currentSize);
   }
 
