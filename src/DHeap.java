@@ -1,48 +1,46 @@
-//DHeap class
-//
-//CONSTRUCTION: with optional capacity (that defaults to 100)
-//            or an array containing initial items
-//
-//******************PUBLIC OPERATIONS*********************
-//void insert( x )       --> Insert x
-//Comparable deleteMin( )--> Return and remove smallest item
-//Comparable findMin( )  --> Return smallest item
-//boolean isEmpty( )     --> Return true if empty; else false
-//void makeEmpty( )      --> Remove all items
-//******************ERRORS********************************
-//Throws UnderflowException as appropriate
-
 /**
+ * Amanda Stensland amst8501
+ * Veronica Stensland vest915
+ * 
  * Implements a binary heap. Note that all "matching" is based on the compareTo
  * method.
  * 
  * @author Mark Allen Weiss
  */
 public class DHeap<AnyType extends Comparable<? super AnyType>> {
+  private static final int DEFAULT_MAX_CHILDREN = 2;
+  private int currentSize;
+  private AnyType[] array;
+  private int maxChildren;
+
   /**
-   * Construct the binary heap.
+   * Construct the d-ary heap.
+   * Om vi inte skickar in maxChildren när vi skapar vår DHeap,
+   * sätt maxChildren till ett defaultvärde på 2.
    */
   public DHeap() {
-    this(DEFAULT_CAPACITY);
+    this(DEFAULT_MAX_CHILDREN);
   }
 
   /**
-   * Construct the binary heap.
+   * Construct the d-ary heap.
    * 
-   * @param capacity the capacity of the binary heap.
+   * @param capacity the max size of the d-ary heap's array.
+   * @param maxChildren the maximum number of children per node.
    */
-  public DHeap(int capacity) {
-    currentSize = 0;
-    array = (AnyType[]) new Comparable[capacity + 1];
+  public DHeap(int maxChildren) {
+    if (maxChildren < 2) throw new IllegalArgumentException();
+    this.currentSize = 0;
+    this.array = (AnyType[]) new Comparable[maxChildren + 2];
+    this.maxChildren = maxChildren;
   }
 
   /**
-   * Construct the binary heap given an array of items.
+   * Construct the d-ary heap given an array of items.
    */
   public DHeap(AnyType[] items) {
-    currentSize = items.length;
-    array = (AnyType[]) new Comparable[(currentSize + 2) * 11 / 10];
-
+    this.currentSize = items.length;
+    this.array = (AnyType[]) new Comparable[(currentSize + 2) * 11 / 10];
     int i = 1;
     for (AnyType item : items)
       array[i++] = item;
@@ -53,24 +51,24 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
    * Insert into the priority queue, maintaining heap order. Duplicates are
    * allowed.
    * 
-   * @param x the item to insert.
+   * @param item the item to insert.
    */
-  public void insert(AnyType x) {
+  public void insert(AnyType item) {
     if (currentSize == array.length - 1)
       enlargeArray(array.length * 2 + 1);
-
-    // Percolate up
-    int hole = ++currentSize;
-    for (array[0] = x; x.compareTo(array[hole / 2]) < 0; hole /= 2)
-      array[hole] = array[hole / 2];
-    array[hole] = x;
+    array[++currentSize] = item;
+    percolateUp(currentSize);
   }
 
+  /**
+   * Enlarges the heap array.
+   * 
+   * @param newSize the new size to enlarge to.
+   */
   private void enlargeArray(int newSize) {
     AnyType[] old = array;
     array = (AnyType[]) new Comparable[newSize];
-    for (int i = 0; i < old.length; i++)
-      array[i] = old[i];
+    for (int i = 0; i < old.length; i++) array[i] = old[i];
   }
 
   /**
@@ -79,8 +77,7 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
    * @return the smallest item, or throw an UnderflowException if empty.
    */
   public AnyType findMin() {
-    if (isEmpty())
-      throw new UnderflowException();
+    if (isEmpty()) throw new UnderflowException();
     return array[1];
   }
 
@@ -90,14 +87,13 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
    * @return the smallest item, or throw an UnderflowException if empty.
    */
   public AnyType deleteMin() {
-    if (isEmpty())
-      throw new UnderflowException();
-
-    AnyType minItem = findMin();
-    array[1] = array[currentSize--];
-    percolateDown(1);
-
-    return minItem;
+    if (isEmpty()) throw new UnderflowException();
+    AnyType removedValue = array[1]; // Spara så värdet kan returneras när det tagits bort.
+    array[1] = array[currentSize]; // Ersätt värdet i root-index med värdet från tail-index.
+    array[currentSize] = null;
+    currentSize--; // Förminska arrayen, dsv. ta bort tail-index.
+    if (currentSize > 1) percolateDown(1); // Bubbla ner värdet från root-index till rätt index.
+    return removedValue; // Returnera värdet som tagits bort.
   }
 
   /**
@@ -125,42 +121,95 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
     currentSize = 0;
   }
 
-  private static final int DEFAULT_CAPACITY = 10;
-
-  private int currentSize; // Number of elements in heap
-  private AnyType[] array; // The heap array
+  /**
+   * Internal method for swapping values between index.
+   * 
+   * @param firstIndex first value to be swapped.
+   * @param secondIndex second value to be swapped.
+   */
+  private void swap(int firstIndex, int secondIndex) {
+    AnyType firstValue = this.array[firstIndex];
+    this.array[firstIndex] = this.array[secondIndex];
+    this.array[secondIndex] = firstValue;
+  }
 
   /**
    * Internal method to percolate down in the heap.
    * 
-   * @param hole the index at which the percolate begins.
+   * @param index the index at which the percolate begins.
    */
-  private void percolateDown(int hole) {
-    int child;
-    AnyType tmp = array[hole];
+  private void percolateUp(int index) {
 
-    for (; hole * 2 <= currentSize; hole = child) {
-      child = hole * 2;
-      if (child != currentSize && array[child + 1].compareTo(array[child]) < 0)
-        child++;
-      if (array[child].compareTo(tmp) < 0)
-        array[hole] = array[child];
-      else
-        break;
+    // Om index är mindre än 2, dsv. root-index, gör ingenting.
+
+    if (index < 2)
+      return;
+
+    int parentIndex = parentIndex(index);
+    AnyType parentValue = array[parentIndex];
+    AnyType value = array[index];
+
+    if (parentValue == null) return;
+
+    if (value.compareTo(parentValue) < 0) {
+      swap(index, parentIndex);
+      index = parentIndex;
+      percolateUp(index);
     }
-    array[hole] = tmp;
   }
 
-  // Test program
-  public static void main(String[] args) {
-    int numItems = 10000;
-    DHeap<Integer> h = new DHeap<>();
-    int i = 37;
+  /**
+   * Internal method to percolate down in the heap.
+   * 
+   * @param index the index at which the percolate begins.
+   */
+  private void percolateDown(int index) {
+    int firstChildIndex = firstChildIndex(index);
+    int lastChildIndex = firstChildIndex + maxChildren - 1;
+    int smallestIndex = index;
+    AnyType smallestValue = array[index];
 
-    for (i = 37; i != 0; i = (i + 37) % numItems)
-      h.insert(i);
-    for (i = 1; i < numItems; i++)
-      if (h.deleteMin() != i)
-        System.out.println("Oops! " + i);
+    if (currentSize < lastChildIndex)
+      lastChildIndex = currentSize;
+
+    // Loopa igenom alla barn och hitta det minsta värdet.
+
+    for (int i = firstChildIndex; i <= lastChildIndex; i++) {
+      AnyType value = array[i];
+
+      // Om barnet har ett mindre värde, markera det som minsta värdet.
+
+      if (value.compareTo(smallestValue) < 0) {
+        smallestIndex = i;
+        smallestValue = array[smallestIndex];
+      }
+    }
+      
+    // Om det tidigare visade sig finnas ett barn med ett mindre värde,
+    // byt plats på barnet och föräldern.
+    
+    AnyType parentValue = array[index];
+    if (smallestValue.compareTo(parentValue) < 0) {
+      swap(index, smallestIndex);
+      percolateDown(smallestIndex);
+    }
+  }
+
+  public int parentIndex(int index) {
+    if (index < 2) throw new IllegalArgumentException();
+    return (index - 2) / maxChildren + 1;
+  }
+
+  public int firstChildIndex(int index) {
+    if (index < 1) throw new IllegalArgumentException();
+    return index * maxChildren + 2 - maxChildren;
+  }
+
+  public int size() {
+    return currentSize;
+  }
+
+  public AnyType get(int index) {
+    return array[index];
   }
 }
