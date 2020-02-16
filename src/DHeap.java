@@ -2,8 +2,8 @@
  * Amanda Stensland amst8501
  * Veronica Stensland vest915
  * 
- * Implements a d-ary heap. Note that all "matching" is based on the compareTo
- * method.
+ * Implements a min d-ary heap. Note that all "matching" is based on the
+ * compareTo method.
  * 
  * @author Mark Allen Weiss
  */
@@ -123,7 +123,7 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
 
     currentSize--;
 
-    // Om storleken på heapen är större än 1,
+    // Om storleken på heap-trädet är större än 1,
     // bubbla ner värdet från root-index till rätt index.
 
     if (currentSize > 1)
@@ -135,8 +135,8 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
   }
 
   /**
-   * Establish heap order property from an arbitrary arrangement of items. Runs in
-   * linear time.
+   * Establish heap order property from an arbitrary arrangement of items.
+   * Runs in linear time.
    */
   private void buildHeap() {
     for (int i = currentSize / 2; i > 0; i--)
