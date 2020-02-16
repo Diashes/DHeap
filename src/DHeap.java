@@ -188,14 +188,13 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
     AnyType parentValue = array[parentIndex];
     AnyType value = array[index];
 
-    // Om värdet är mindre än förälderns värde, byt plats på dem.
-    // Efter byte av värde, glöm inte att uppdatera till förälderns index.
-    // Fortsätt sedan att bubbla upp index.
+    // Om värdet är mindre än förälderns värde, byt index med föräldern.
+    // Efter bytet, så har värdet fått förälderns index istället.
+    // Fortsätt sedan att bubbla upp värdet.
 
     if (value.compareTo(parentValue) < 0) {
       swap(index, parentIndex);
-      index = parentIndex;
-      percolateUp(index);
+      percolateUp(parentIndex);
     }
   }
 
@@ -205,38 +204,44 @@ public class DHeap<AnyType extends Comparable<? super AnyType>> {
    * @param index the index at which the percolate begins.
    */
   private void percolateDown(int index) {
+
+    // Hämta första och sista barnet för index.
+
     int firstChildIndex = firstChildIndex(index);
     int lastChildIndex = firstChildIndex + maxChildren - 1;
+    
+    // Om currentSize är mindre än lastChildIndex så betyder det att
+    // lastChildIndex inte är tillagt i heap-trädet.
+    // Det sista barnets index ligger alltså på värdet av currentSize.
+    
+    if (currentSize < lastChildIndex)
+      lastChildIndex = currentSize;
+    
+    // Vi utgår från att smallestIndex och smallestValue är på nuvarande index.
+    
     int smallestIndex = index;
     AnyType smallestValue = array[index];
 
-    // Om det sista indexet i trädet (currentSize) är mindre än det sista 
-    // indexet för nodens (index) barn (lastChildIndex), betyder det att 
-    // noden inte har alla sina barn tillagda i trädet än.
-    // Det sista barnet ligger alltså på det
-    // sista indexet i trädet (currentSize).
-
-    if (currentSize < lastChildIndex)
-      lastChildIndex = currentSize;
-
-    // Loopa igenom alla barn och hitta det minsta värdet.
+    // Loopa igenom alla barn och kontrollera om
+    // någon av barnen har ett mindre värde.
 
     for (int i = firstChildIndex; i <= lastChildIndex; i++) {
       AnyType value = array[i];
 
-      // Om barnet har ett mindre värde, sätt det till smallestIndex och smallestValue.
+      // Om barnet har ett mindre värde, 
+      // sätt det till smallestIndex och smallestValue.
 
       if (value.compareTo(smallestValue) < 0) {
         smallestIndex = i;
-        smallestValue = array[smallestIndex];
+        smallestValue = array[i];
       }
     }
       
-    // Om det finns ett barn med ett mindre värde,
-    // byt plats på barnet och föräldern.
+    // Om det finns ett barn med ett mindre värde, byt index med barnet.
+    // Efter bytet, så har värdet fått barnets index istället.
+    // Fortsätt sedan att bubbla ner värdet.
     
-    AnyType parentValue = array[index];
-    if (smallestValue.compareTo(parentValue) < 0) {
+    if (smallestValue.compareTo(array[index]) < 0) {
       swap(index, smallestIndex);
       percolateDown(smallestIndex);
     }
